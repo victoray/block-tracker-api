@@ -1,11 +1,14 @@
+import json
 from datetime import datetime
 from enum import IntEnum
+from typing import Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from db.transactions import collection
+from db.assets import collection as asset_collection
 
 router = APIRouter(prefix="/transactions")
 
@@ -27,7 +30,7 @@ class Transaction(BaseModel):
 
 @router.get("/")
 async def get_transactions(asset_id: str):
-    docs = collection.find({Transaction.ASSET_ID: asset_id})
+    docs = collection.find({"assetId": asset_id})
     transactions = []
 
     for doc in docs:
@@ -39,8 +42,7 @@ async def get_transactions(asset_id: str):
 @router.post("/")
 async def create_transaction(body: Transaction):
     result = collection.insert_one(body.dict(exclude_none=True))
-
-    return {"id": result.inserted_id}
+    return {"id": str(result.inserted_id)}
 
 
 @router.put("/{transaction_id}")

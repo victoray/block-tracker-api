@@ -6,3 +6,4 @@ from settings import DATABASE
 db = client[DATABASE]
 COLLECTION = "assets"
 collection: Collection = db[COLLECTION]
+collection.create_index("id", unique=True)
