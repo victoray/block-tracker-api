@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
-from routers import assets, transactions
+from routers import assets, transactions, price
 
 app = FastAPI(title="Block Tracker API", version="1.0.0")
 
@@ -15,6 +15,7 @@ origins = [
 
 app.include_router(assets.router)
 app.include_router(transactions.router)
+app.include_router(price.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,7 +30,7 @@ with open("coinlist.json") as f:
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"version": app.version}
 
 
 class Balance(BaseModel):

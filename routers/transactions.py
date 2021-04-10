@@ -1,14 +1,11 @@
-import json
 from datetime import datetime
 from enum import IntEnum
-from typing import Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from db.transactions import collection
-from db.assets import collection as asset_collection
 
 router = APIRouter(prefix="/transactions")
 

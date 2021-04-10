@@ -1,4 +1,5 @@
 import json
+from contextlib import suppress
 from typing import List
 
 from fastapi import APIRouter
@@ -6,6 +7,7 @@ from pydantic import BaseModel
 
 from db.assets import collection as asset_collection
 from db.transactions import collection as transaction_collection
+from price.coinmarketcap import get_latest_price
 from routers.transactions import Transaction
 
 router = APIRouter(prefix="/assets")
@@ -38,11 +40,15 @@ def aggregate_asset(transactions: List[Transaction]):
     assets = []
 
     for asset, transactions in groups.items():
+        with suppress():
+            price = "-"
+            price = get_latest_price(asset).priceUSD
+
         asset = Asset(
             id=asset,
             name=coin_list.get("Data", {}).get(asset, {}).get("CoinName"),
             coin=coin_list.get("Data", {}).get(asset, {}),
-            price=2000,
+            price=price,
             amount=sum(map(lambda x: x.amount, transactions)),
         )
         assets.append(asset.dict())
@@ -56,7 +62,8 @@ def aggregate_asset(transactions: List[Transaction]):
 @router.get("/", response_model=List[Asset])
 async def get_assets():
     transactions = transaction_collection.find({})
-    aggregate_asset([Transaction.parse_obj(t) for t in transactions])
+    transaction_objects = [Transaction.parse_obj(t) for t in transactions]
+    aggregate_asset(transaction_objects)
     result = asset_collection.find({})
     assets = []
     for doc in result:
