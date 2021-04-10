@@ -5,7 +5,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
-from routers import assets, transactions, price
+import assets
+import price
+import transactions
 
 app = FastAPI(title="Block Tracker API", version="1.0.0")
 
