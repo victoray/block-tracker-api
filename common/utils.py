@@ -4,13 +4,37 @@ from typing import List
 
 from assets.db import collection as asset_collection
 from assets.models import Asset
+from balance.db import collection as balance_collection
+from balance.models import Balance
 from price.coinmarketcap import get_latest_price
 from transactions.db import collection as transaction_collection
 from transactions.models import Transaction
-from transactions.utils import get_transaction_objects
 
 with open("coinlist.json") as f:
     coin_list: dict = json.load(f)
+
+
+def get_transaction_objects(docs: List[dict]) -> List[Transaction]:
+    transactions = []
+
+    for doc in docs:
+        doc["id"] = str(doc.pop("_id"))
+        doc["coin"] = coin_list.get("Data", {}).get(doc["assetId"])
+        transactions.append(Transaction.parse_obj(doc))
+
+    return transactions
+
+
+def calculate_balance():
+    result = asset_collection.find({})
+    assets: List[Asset] = []
+    for doc in result:
+        assets.append(Asset.parse_obj(doc))
+
+    current_value = sum(map(lambda a: a.currentValue, assets))
+    original_value = sum(map(lambda a: a.originalValue, assets))
+    balance = Balance(amount=current_value, change=current_value - original_value)
+    balance_collection.update_one({}, {"$set": balance.dict()})
 
 
 def calculate_asset_pnl(transactions: List[Transaction], asset_id: str):
@@ -57,6 +81,8 @@ def aggregate_asset(transactions: List[Transaction]):
             coin=coin_list.get("Data", {}).get(asset, {}),
             price=price,
             amount=sum(map(lambda x: x.amount, transactions)),
+            currentValue=current_value,
+            originalValue=original_value,
             pnl=current_value - original_value,
             pnlPercent=pnl_percent,
         )

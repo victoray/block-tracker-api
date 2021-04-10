@@ -1,13 +1,14 @@
 from datetime import datetime
 from enum import IntEnum
+from typing import Optional
 
+from bson import ObjectId
 from pydantic.main import BaseModel
+
+from transactions.db import collection
 
 
 class Transaction(BaseModel):
-    ASSET_ID = "assetId"
-    ID = "id_"
-
     class Type(IntEnum):
         ADD = 0
         REMOVE = 1
@@ -17,3 +18,14 @@ class Transaction(BaseModel):
     price: float
     amount: float
     assetId: str
+    pnl: Optional[float]
+    pnlPercent: Optional[float]
+    coin: Optional[dict]
+    id: Optional[str]
+    _id: Optional[ObjectId]
+
+    def save(self):
+        collection.update_one(
+            {"_id": ObjectId(self.id)},
+            {"$set": self.dict(include={"pnl", "pnlPercent"})},
+        )

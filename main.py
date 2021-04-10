@@ -2,12 +2,12 @@ import json
 
 import uvicorn
 from fastapi import FastAPI
-from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
 import assets
 import price
 import transactions
+from balance.router import router
 
 app = FastAPI(title="Block Tracker API", version="1.0.0")
 
@@ -18,6 +18,7 @@ origins = [
 app.include_router(assets.router)
 app.include_router(transactions.router)
 app.include_router(price.router)
+app.include_router(router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -33,16 +34,6 @@ with open("coinlist.json") as f:
 @app.get("/")
 async def root():
     return {"version": app.version}
-
-
-class Balance(BaseModel):
-    amount: float = 0
-    change: float = 0
-
-
-@app.get("/balance/", response_model=Balance)
-async def balance():
-    return Balance()
 
 
 @app.get("/coin-list/")

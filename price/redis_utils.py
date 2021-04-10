@@ -4,10 +4,6 @@ import sys
 import redis
 
 
-# from price.settings import REDIS_URL
-
-
-#
 def redis_connect() -> redis.client.Redis:
     try:
         client = redis.Redis.from_url("redis://localhost:6379/0")
