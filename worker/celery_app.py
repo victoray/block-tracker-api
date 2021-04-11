@@ -10,12 +10,12 @@ from balance.models import Balance
 from common.utils import calculate_balance, aggregate_transactions
 from series.db import SERIES_COLLECTION
 from series.models import Series
-from settings import MONGODB_URL, DATABASE
+from settings import MONGODB_URL, DATABASE, REDIS_URL
 
 celery_app = Celery(
     "tasks",
-    backend="redis://localhost:6379/0",
-    broker="amqp://localhost:5672//",
+    backend=REDIS_URL,
+    broker=REDIS_URL,
 )
 
 celery_app.conf.update(task_track_started=True)

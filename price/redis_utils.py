@@ -3,10 +3,12 @@ import sys
 
 import redis
 
+from settings import REDIS_URL
+
 
 def redis_connect() -> redis.client.Redis:
     try:
-        client = redis.Redis.from_url("redis://localhost:6379/0")
+        client = redis.Redis.from_url(REDIS_URL)
         ping = client.ping()
         if ping is True:
             return client
