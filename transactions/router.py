@@ -1,7 +1,9 @@
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
+from starlette.background import BackgroundTasks
 
 from auth.dependencies import get_current_active_user
+from common.utils import update_assets
 from transactions.db import collection
 from transactions.models import Transaction
 from transactions.utils import get_transaction_objects
@@ -42,15 +44,18 @@ async def update_transaction(
     return {"id": transaction_id}
 
 
-@router.delete("/{transaction_id}")
+@router.delete("/{transaction_id}/")
 async def delete_transaction(
-    transaction_id: str, user=Depends(get_current_active_user)
+    transaction_id: str,
+    background_tasks: BackgroundTasks,
+    user=Depends(get_current_active_user),
 ):
-    result = collection.delete_one(
-        {"_id": ObjectId(transaction_id), "userId": user.uid}
-    )
+    query = {"_id": ObjectId(transaction_id), "userId": user.uid}
+    result = collection.find_one_and_delete(query)
 
-    if not result.deleted_count:
+    if not result:
         raise HTTPException(status_code=404)
+
+    background_tasks.add_task(update_assets, Transaction.parse_obj(result), user.uid)
 
     return ""

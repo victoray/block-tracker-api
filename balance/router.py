@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends
 from starlette.background import BackgroundTasks
 
@@ -11,8 +13,11 @@ router = APIRouter(prefix="/balance")
 
 @router.get("/", response_model=Balance)
 async def get_balance(
-    background_tasks: BackgroundTasks, user=Depends(get_current_active_user)
+    background_tasks: BackgroundTasks,
+    user=Depends(get_current_active_user),
+    assetId: Optional[str] = None,
 ):
-    balance = collection.find_one({})
-    background_tasks.add_task(calculate_balance, user.uid)
+    query = {"userId": user.uid, "assetId": assetId}
+    balance = collection.find_one(query)
+    background_tasks.add_task(calculate_balance, user.uid, assetId)
     return Balance.parse_obj(balance) if balance else Balance(userId=user.uid)

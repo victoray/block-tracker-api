@@ -6,4 +6,4 @@ from settings import DATABASE
 db = client[DATABASE]
 COLLECTION = "balance"
 collection: Collection = db[COLLECTION]
-collection.create_index("userId", unique=True)
+collection.create_index([("userId", 1), ("assetId", 1)], unique=True)

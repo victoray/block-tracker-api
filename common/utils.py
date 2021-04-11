@@ -25,8 +25,13 @@ def get_transaction_objects(docs: List[dict]) -> List[Transaction]:
     return transactions
 
 
-def calculate_balance(user_id: str):
-    result = asset_collection.find({})
+def calculate_balance(user_id: str, asset_id=None):
+    query = {"userId": user_id}
+
+    if asset_id:
+        query.update(id=asset_id)
+
+    result = asset_collection.find(query)
     assets: List[Asset] = []
     for doc in result:
         assets.append(Asset.parse_obj(doc))
@@ -37,10 +42,11 @@ def calculate_balance(user_id: str):
         amount=current_value,
         change=calculate_pnl_percent(original_value, current_value),
         userId=user_id,
+        assetId=asset_id,
     )
-    balance_collection.update_one(
-        {"userId": user_id}, {"$set": balance.dict()}, upsert=True
-    )
+    if asset_id:
+        query["assetId"] = query.pop("id")
+    balance_collection.update_one(query, {"$set": balance.dict()}, upsert=True)
 
 
 def calculate_asset_pnl(transactions: List[Transaction], asset_id: str):
@@ -132,3 +138,12 @@ def aggregate_transactions(transaction_filter=None):
         for t in get_transaction_objects(transactions)
     ]
     aggregate_asset(transaction_objects, user_id=transaction_filter.get("userId"))
+
+
+def update_assets(transaction: Transaction, user_id: str):
+
+    transaction_count = transaction_collection.count_documents(
+        {"userId": user_id, "assetId": transaction.assetId}
+    )
+    if not transaction_count:
+        asset_collection.delete_one({"userId": user_id, "id": transaction.assetId})
