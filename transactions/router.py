@@ -4,6 +4,7 @@ from starlette.background import BackgroundTasks
 
 from auth.dependencies import get_current_active_user
 from common.utils import update_assets
+from mail.send_email import send_email
 from transactions.db import collection
 from transactions.models import Transaction
 from transactions.utils import get_transaction_objects
@@ -20,13 +21,26 @@ async def get_transactions(asset_id: str, user=Depends(get_current_active_user))
 
 
 @router.post("/")
-async def create_transaction(body: Transaction, user=Depends(get_current_active_user)):
+async def create_transaction(
+    body: Transaction,
+    background_tasks: BackgroundTasks,
+    user=Depends(get_current_active_user),
+):
     transaction = body.dict(exclude_none=True)
     transaction.update(userId=user.uid)
     if transaction.get("type") == Transaction.Type.REMOVE:
         transaction.update({"amount": transaction.get("amount") * -1})
 
     result = collection.insert_one(transaction)
+
+    background_tasks.add_task(
+        send_email,
+        user.uid,
+        "Transaction created",
+        f"""Token: {body.assetId}
+            Amount: {body.amount}
+        """,
+    )
     return {"id": str(result.inserted_id)}
 
 
@@ -56,6 +70,16 @@ async def delete_transaction(
     if not result:
         raise HTTPException(status_code=404)
 
-    background_tasks.add_task(update_assets, Transaction.parse_obj(result), user.uid)
+    transaction = Transaction.parse_obj(result)
+    background_tasks.add_task(update_assets, transaction, user.uid)
+    background_tasks.add_task(
+        send_email,
+        user.uid,
+        "Transaction Deleted",
+        f"""
+        Token: {transaction.assetId}
+        Amount: {transaction.amount}
+        """,
+    )
 
     return ""

@@ -1,4 +1,5 @@
 import json
+import logging
 
 import firebase_admin
 import uvicorn
@@ -6,12 +7,15 @@ from fastapi import FastAPI, Depends
 from firebase_admin import credentials
 from starlette.middleware.cors import CORSMiddleware
 
+from app_settings.router import settings_router
 from assets.router import router as asset_router
 from auth.dependencies import get_current_user
 from balance.router import router as balance_router
 from price.router import router as price_router
+from series.router import series_router
 from settings import FIREBASE_APP
 from transactions.router import router as transaction_router
+from worker.celery_app import aggregate_series
 
 
 def initialize():
@@ -33,6 +37,13 @@ app = FastAPI(
     dependencies=[Depends(get_current_user)],
 )
 
+log = logging.getLogger(__name__)
+
+
+@app.on_event("startup")
+def init_app():
+    aggregate_series.delay()
+
 
 origins = [
     "http://localhost",
@@ -42,6 +53,8 @@ app.include_router(asset_router)
 app.include_router(transaction_router)
 app.include_router(price_router)
 app.include_router(balance_router)
+app.include_router(series_router)
+app.include_router(settings_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

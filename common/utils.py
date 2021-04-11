@@ -46,7 +46,9 @@ def calculate_balance(user_id: str, asset_id=None):
     )
     if asset_id:
         query["assetId"] = query.pop("id")
-    balance_collection.update_one(query, {"$set": balance.dict()}, upsert=True)
+    return balance_collection.find_one_and_update(
+        query, {"$set": balance.dict()}, upsert=True
+    )
 
 
 def calculate_asset_pnl(transactions: List[Transaction], asset_id: str):
