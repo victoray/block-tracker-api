@@ -10,3 +10,4 @@ fastapi~=0.63.0
 celery~=5.0.5
 pendulum~=2.1.2
 firebase_admin==4.5.3
+dnspython==2.1.0
