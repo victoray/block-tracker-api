@@ -13,15 +13,15 @@ from auth.dependencies import get_current_user
 from balance.router import router as balance_router
 from price.router import router as price_router
 from series.router import series_router
-from settings import FIREBASE_APP
+from settings import FIREBASE_APP, GOOGLE_CREDENTIALS
 from transactions.router import router as transaction_router
 from worker.celery_app import aggregate_series
 
 
 def initialize():
     """set credentials (intermediate credential file is created)"""
-    credentials_path = "credentials.json"
-    cred = credentials.Certificate(credentials_path)
+
+    cred = credentials.Certificate(json.loads(GOOGLE_CREDENTIALS))
     try:
         firebase_admin.get_app(FIREBASE_APP)
     except ValueError:
