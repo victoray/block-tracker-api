@@ -16,14 +16,18 @@ def get_series(
     lte: str,
     user=Depends(get_current_active_user),
 ):
-    result = collection.find(
-        {
-            "userId": user.uid,
-            "date": {
-                "$gte": pendulum.parse(gte),
-                "$lte": pendulum.parse(lte),
-            },
-        }
+    result = (
+        collection.find(
+            {
+                "userId": user.uid,
+                "date": {
+                    "$gte": pendulum.parse(gte),
+                    "$lte": pendulum.parse(lte),
+                },
+            }
+        )
+        .sort([("date", -1)])
+        .limit(1000)
     )
     series = []
     for doc in result:
