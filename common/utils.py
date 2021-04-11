@@ -110,6 +110,9 @@ def aggregate_asset(transactions: List[Transaction], user_id: str):
 
 
 def calculate_pnl_percent(original_value: float, current_value: float):
+    if not original_value:
+        return 0
+
     change = (current_value / original_value) * 100
     return change - 100
 

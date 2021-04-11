@@ -1,6 +1,8 @@
 import requests
 
 from app_settings.db import settings_collection
+from app_settings.models import Settings
+from settings import MAILGUN_API_KEY
 
 DEFAULT_EMAIL = (
     "Block Tracker <postmaster@sandbox38920d794f42405e81f5689097f0cc19.mailgun.org>"
@@ -19,7 +21,7 @@ class MailGunClient:
     ):
         return requests.post(
             self.url,
-            auth=("api",),
+            auth=("api", MAILGUN_API_KEY),
             data={
                 "from": from_,
                 "to": to,
@@ -30,11 +32,12 @@ class MailGunClient:
 
 
 def send_email(user_id: str, subject: str, text: str):
-    settings: dict = settings_collection.find_one({"userId": user_id})
+    settings = settings_collection.find_one({"userId": user_id})
+    settings = Settings.parse_obj(settings)
     if not settings:
         return
 
-    email = settings.get("email")
-    if email:
+    email = settings.email
+    if email and settings.allowNotifications:
         client = MailGunClient()
         client.send_email(to=email, subject=subject, text=text)
