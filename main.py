@@ -1,24 +1,47 @@
 import json
 
+import firebase_admin
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from firebase_admin import credentials
 from starlette.middleware.cors import CORSMiddleware
 
-import assets
-import price
-import transactions
-from balance.router import router
+from assets.router import router as asset_router
+from auth.dependencies import get_current_user
+from balance.router import router as balance_router
+from price.router import router as price_router
+from settings import FIREBASE_APP
+from transactions.router import router as transaction_router
 
-app = FastAPI(title="Block Tracker API", version="1.0.0")
+
+def initialize():
+    """set credentials (intermediate credential file is created)"""
+    credentials_path = "credentials.json"
+    cred = credentials.Certificate(credentials_path)
+    try:
+        firebase_admin.get_app(FIREBASE_APP)
+    except ValueError:
+        firebase_admin.initialize_app(cred, name=FIREBASE_APP)
+
+
+initialize()
+
+
+app = FastAPI(
+    title="Block Tracker API",
+    version="1.0.0",
+    dependencies=[Depends(get_current_user)],
+)
+
 
 origins = [
     "http://localhost",
 ]
 
-app.include_router(assets.router)
-app.include_router(transactions.router)
-app.include_router(price.router)
-app.include_router(router)
+app.include_router(asset_router)
+app.include_router(transaction_router)
+app.include_router(price_router)
+app.include_router(balance_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

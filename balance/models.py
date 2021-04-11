@@ -1,7 +1,7 @@
-from pydantic.main import BaseModel
+from common.models import Ownable
 
 
-class Balance(BaseModel):
+class Balance(Ownable):
     amount: float = 0
     change: float = 0
     change1h: float = 0

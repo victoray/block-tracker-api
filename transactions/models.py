@@ -3,12 +3,12 @@ from enum import IntEnum
 from typing import Optional
 
 from bson import ObjectId
-from pydantic.main import BaseModel
 
+from common.models import Ownable
 from transactions.db import collection
 
 
-class Transaction(BaseModel):
+class Transaction(Ownable):
     class Type(IntEnum):
         ADD = 0
         REMOVE = 1

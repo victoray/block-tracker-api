@@ -25,7 +25,7 @@ def get_transaction_objects(docs: List[dict]) -> List[Transaction]:
     return transactions
 
 
-def calculate_balance():
+def calculate_balance(user_id: str):
     result = asset_collection.find({})
     assets: List[Asset] = []
     for doc in result:
@@ -33,8 +33,14 @@ def calculate_balance():
 
     current_value = sum(map(lambda a: a.currentValue, assets))
     original_value = sum(map(lambda a: a.originalValue, assets))
-    balance = Balance(amount=current_value, change=current_value - original_value)
-    balance_collection.update_one({}, {"$set": balance.dict()})
+    balance = Balance(
+        amount=current_value,
+        change=calculate_pnl_percent(original_value, current_value),
+        userId=user_id,
+    )
+    balance_collection.update_one(
+        {"userId": user_id}, {"$set": balance.dict()}, upsert=True
+    )
 
 
 def calculate_asset_pnl(transactions: List[Transaction], asset_id: str):
@@ -57,7 +63,7 @@ def calculate_asset_pnl(transactions: List[Transaction], asset_id: str):
     )
 
 
-def aggregate_asset(transactions: List[Transaction]):
+def aggregate_asset(transactions: List[Transaction], user_id: str):
     groups: dict = {}
     for transaction in transactions:
         groups[transaction.assetId] = groups.get(transaction.assetId, []) + [
@@ -85,12 +91,13 @@ def aggregate_asset(transactions: List[Transaction]):
             originalValue=original_value,
             pnl=current_value - original_value,
             pnlPercent=pnl_percent,
+            userId=user_id,
         )
         assets.append(asset.dict())
 
     for asset in assets:
         asset_collection.update_one(
-            {"id": asset.get("id")}, {"$set": asset}, upsert=True
+            {"id": asset.get("id"), "userId": user_id}, {"$set": asset}, upsert=True
         )
 
 
@@ -124,4 +131,4 @@ def aggregate_transactions(transaction_filter=None):
         calculate_pnl(Transaction.parse_obj(t), save=True)
         for t in get_transaction_objects(transactions)
     ]
-    aggregate_asset(transaction_objects)
+    aggregate_asset(transaction_objects, user_id=transaction_filter.get("userId"))

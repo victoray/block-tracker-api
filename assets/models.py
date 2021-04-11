@@ -1,9 +1,9 @@
 from typing import Optional
 
-from pydantic.main import BaseModel
+from common.models import Ownable
 
 
-class Asset(BaseModel):
+class Asset(Ownable):
     id: str
     name: str
     price: str
