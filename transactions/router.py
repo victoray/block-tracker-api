@@ -41,7 +41,7 @@ async def create_transaction(
             Amount: {body.amount}
         """,
     )
-    transaction.update({"id": result.inserted_id})
+    transaction.update({"id": str(result.inserted_id)})
     background_tasks.add_task(calculate_pnl, Transaction.parse_obj(transaction), True)
     return {"id": str(result.inserted_id)}
 
