@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from starlette.background import BackgroundTasks
 
 from auth.dependencies import get_current_active_user
-from common.utils import update_assets
+from common.utils import update_assets, calculate_pnl
 from mail.send_email import send_email
 from transactions.db import collection
 from transactions.models import Transaction
@@ -41,22 +41,29 @@ async def create_transaction(
             Amount: {body.amount}
         """,
     )
+    transaction.update({"id": result.inserted_id})
+    background_tasks.add_task(calculate_pnl, Transaction.parse_obj(transaction), True)
     return {"id": str(result.inserted_id)}
 
 
 @router.put("/{transaction_id}/")
 async def update_transaction(
-    transaction_id: str, body: dict, user=Depends(get_current_active_user)
+    transaction_id: str,
+    body: dict,
+    background_tasks: BackgroundTasks,
+    user=Depends(get_current_active_user),
 ):
     if body.get("type") == Transaction.Type.REMOVE:
         body.update({"amount": body.get("amount") * -1})
 
-    result = collection.update_one(
+    result = collection.find_one_and_update(
         {"_id": ObjectId(transaction_id), "userId": user.uid}, {"$set": body}
     )
 
-    if not result.matched_count:
+    if not result:
         raise HTTPException(status_code=404)
+
+    background_tasks.add_task(calculate_pnl, Transaction.parse_obj(result), True)
 
     return {"id": transaction_id}
 
