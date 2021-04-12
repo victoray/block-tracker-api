@@ -27,5 +27,5 @@ class Transaction(Ownable):
     def save(self):
         collection.update_one(
             {"_id": ObjectId(self.id)},
-            {"$set": self.dict(include={"pnl", "pnlPercent"})},
+            {"$set": self.dict(include={"pnl", "pnlPercent", "amount"})},
         )

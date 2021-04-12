@@ -126,9 +126,10 @@ def calculate_pnl(transaction: Transaction, save=False):
     if current_price:
         amount = (
             transaction.amount * -1
-            if transaction.type == Transaction.Type.REMOVE and Transaction.amount > 0
+            if transaction.type == Transaction.Type.REMOVE and transaction.amount > 0
             else transaction.amount
         )
+        transaction.amount = amount
         current_value = amount * float(current_price)
         original_value = amount * price
         transaction.pnl = current_value - original_value
