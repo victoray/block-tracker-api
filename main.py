@@ -3,7 +3,7 @@ import logging
 
 import firebase_admin
 import uvicorn
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, APIRouter
 from firebase_admin import credentials
 from starlette.middleware.cors import CORSMiddleware
 
@@ -34,8 +34,9 @@ initialize()
 app = FastAPI(
     title="Block Tracker API",
     version="1.0.0",
-    dependencies=[Depends(get_current_user)],
 )
+
+authenticated_router = APIRouter(dependencies=[Depends(get_current_user)])
 
 log = logging.getLogger(__name__)
 
@@ -49,12 +50,13 @@ origins = [
     "http://localhost",
 ]
 
-app.include_router(asset_router)
-app.include_router(transaction_router)
-app.include_router(price_router)
-app.include_router(balance_router)
-app.include_router(series_router)
-app.include_router(settings_router)
+authenticated_router.include_router(asset_router)
+authenticated_router.include_router(transaction_router)
+authenticated_router.include_router(price_router)
+authenticated_router.include_router(balance_router)
+authenticated_router.include_router(series_router)
+authenticated_router.include_router(settings_router)
+app.include_router(authenticated_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
