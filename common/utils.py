@@ -144,7 +144,7 @@ def aggregate_transactions(transaction_filter=None):
         transaction_filter = {}
     transactions = transaction_collection.find(transaction_filter)
     transaction_objects = [
-        calculate_pnl(Transaction.parse_obj(t), save=True)
+        calculate_pnl(Transaction.parse_obj(t))
         for t in get_transaction_objects(transactions)
     ]
     aggregate_asset(transaction_objects, user_id=transaction_filter.get("userId"))
