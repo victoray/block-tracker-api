@@ -48,6 +48,9 @@ async def create_transaction(
 async def update_transaction(
     transaction_id: str, body: dict, user=Depends(get_current_active_user)
 ):
+    if body.get("type") == Transaction.Type.REMOVE:
+        body.update({"amount": body.get("amount") * -1})
+
     result = collection.update_one(
         {"_id": ObjectId(transaction_id), "userId": user.uid}, {"$set": body}
     )

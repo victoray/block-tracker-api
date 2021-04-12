@@ -124,8 +124,13 @@ def calculate_pnl(transaction: Transaction, save=False):
         current_price = get_latest_price(transaction.assetId).priceUSD
 
     if current_price:
-        current_value = transaction.amount * float(current_price)
-        original_value = transaction.amount * price
+        amount = (
+            transaction.amount * -1
+            if transaction.type == Transaction.Type.REMOVE and Transaction.amount > 0
+            else transaction.amount
+        )
+        current_value = amount * float(current_price)
+        original_value = amount * price
         transaction.pnl = current_value - original_value
         transaction.pnlPercent = calculate_pnl_percent(original_value, current_value)
         if save:
