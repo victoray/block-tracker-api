@@ -117,7 +117,7 @@ def calculate_pnl_percent(original_value: float, current_value: float):
     return change - 100
 
 
-def calculate_pnl(transaction: Transaction, save=False):
+def calculate_pnl(transaction: Transaction):
     price = transaction.price
     with suppress(Exception):
         current_price = None
@@ -134,8 +134,7 @@ def calculate_pnl(transaction: Transaction, save=False):
         original_value = amount * price
         transaction.pnl = current_value - original_value
         transaction.pnlPercent = calculate_pnl_percent(original_value, current_value)
-        if save:
-            transaction.save()
+        transaction.save()
 
     return transaction
 

@@ -42,7 +42,7 @@ async def create_transaction(
         """,
     )
     transaction.update({"id": str(result.inserted_id)})
-    background_tasks.add_task(calculate_pnl, Transaction.parse_obj(transaction), True)
+    background_tasks.add_task(calculate_pnl, Transaction.parse_obj(transaction))
     return {"id": str(result.inserted_id)}
 
 
@@ -63,7 +63,7 @@ async def update_transaction(
     if not result:
         raise HTTPException(status_code=404)
 
-    background_tasks.add_task(calculate_pnl, Transaction.parse_obj(result), True)
+    background_tasks.add_task(calculate_pnl, Transaction.parse_obj(result))
 
     return {"id": transaction_id}
 
