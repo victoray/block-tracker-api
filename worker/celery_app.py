@@ -45,4 +45,4 @@ def aggregate_series():
             series_collection.insert_one(series.dict())
 
         celery_log.info("Ending aggregation cycle, sleeping for 300 seconds")
-        sleep(300)
+        sleep(60)
