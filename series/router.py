@@ -30,7 +30,7 @@ def get_series(
         .limit(1000)
     )
     series = []
-    for doc in result:
+    for doc in result.sort([("date", 1)]):
         doc["id"] = str(doc.pop("_id"))
         series.append(Series.parse_obj(doc))
 
