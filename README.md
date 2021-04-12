@@ -27,7 +27,7 @@ celery -A worker.celery_app worker -E --loglevel=info
 ```
 Start the server in a new tab
 ```shell
-celery -A worker.celery_app worker -E --loglevel=info
+python main.py
 ```
 
 
