@@ -33,9 +33,10 @@ class MailGunClient:
 
 def send_email(user_id: str, subject: str, text: str):
     settings = settings_collection.find_one({"userId": user_id})
-    settings = Settings.parse_obj(settings)
     if not settings:
         return
+
+    settings = Settings.parse_obj(settings)
 
     email = settings.email
     if email and settings.allowNotifications:
