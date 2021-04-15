@@ -22,7 +22,7 @@ ETH_ID = "1027"
 SUPPORTED_CRYPTO = [BTC_ID, ETH_ID]
 
 # CACHE
-CACHE_TIME = 600
+CACHE_TIME = 6000
 
 CMC_URL = "https://pro-api.coinmarketcap.com"
 headers = {
